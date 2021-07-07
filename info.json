@@ -1,0 +1,12 @@
+{
+  "commit": {
+    "commit": "292367dca99c87787bd1526c0a7dc34d9166a6e3",
+    "author": "Rob <39248272+r-ash@users.noreply.github.com>",
+    "time": "2021-07-07 12:11:48",
+    "files": 7,
+    "merge": true,
+    "message": "Merge pull request #48 from ropensci/i43-context\n\nNo longer share one context among many validators"
+  },
+  "remote": "https://github.com/ropensci/jsonvalidate",
+  "pkg": "jsonvalidate"
+}
