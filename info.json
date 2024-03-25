@@ -1,0 +1,12 @@
+{
+  "commit": {
+    "commit": "f942ba39f09474ffee82fef35761b6e1cde0165f",
+    "author": "Rob <39248272+r-ash@users.noreply.github.com>",
+    "time": "2024-03-25 16:39:16",
+    "files": 2,
+    "merge": true,
+    "message": "Merge pull request #80 from plietar/allow-no-nl\n\nAllow reading from files with no trailing newlines."
+  },
+  "repo": "https://github.com/ropensci/jsonvalidate",
+  "pkg": "jsonvalidate"
+}
