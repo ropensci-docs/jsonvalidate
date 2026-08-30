@@ -1,0 +1,176 @@
+# Create a json validator
+
+Create a validator that can validate multiple json files.
+
+## Usage
+
+``` r
+json_validator(schema, engine = "imjv", reference = NULL, strict = FALSE)
+```
+
+## Arguments
+
+- schema:
+
+  Contents of the json schema, or a filename containing a schema.
+
+- engine:
+
+  Specify the validation engine to use. Options are "imjv" (the default;
+  which uses "is-my-json-valid") and "ajv" (Another JSON Schema
+  Validator). The latter supports more recent json schema features.
+
+- reference:
+
+  Reference within schema to use for validating against a sub-schema
+  instead of the full schema passed in. For example if the schema has a
+  'definitions' list including a definition for a 'Hello' object, one
+  could pass "#/definitions/Hello" and the validator would check that
+  the json is a valid "Hello" object. Only available if
+  `engine = "ajv"`.
+
+- strict:
+
+  Set whether the schema should be parsed strictly or not. If in strict
+  mode schemas will error to "prevent any unexpected behaviours or
+  silently ignored mistakes in user schema". For example it will error
+  if encounters unknown formats or unknown keywords. See
+  https://ajv.js.org/strict-mode.html for details. Only available in
+  `engine = "ajv"`.
+
+## Value
+
+A function that can be used to validate a schema. Additionally, the
+function has two attributes assigned: `v8` which is the JavaScript
+context (used internally) and `engine`, which contains the name of the
+engine used.
+
+## Validation Engines
+
+We support two different json validation engines, `imjv`
+("is-my-json-valid") and `ajv` ("Another JSON Validator"). `imjv` was
+the original validator included in the package and remains the default
+for reasons of backward compatibility. However, users are encouraged to
+migrate to `ajv` as with it we support many more features, including
+nested schemas that span multiple files, meta schema versions later than
+draft-04, validating using a subschema, and validating a subset of an
+input data object.
+
+If your schema uses these features we will print a message to screen
+indicating that you should update when running interactively. We do not
+use a warning here as this will be disruptive to users. You can disable
+the message by setting the option `jsonvalidate.no_note_imjv` to `TRUE`.
+Consider using
+[`withr::with_options()`](https://withr.r-lib.org/reference/with_options.html)
+(or simply [`suppressMessages()`](https://rdrr.io/r/base/message.html))
+to scope this option if you want to quieten it within code you do not
+control. Alternatively, setting the option `jsonvalidate.no_note_imjv`
+to `FALSE` will print the message even non-interactively.
+
+Updating the engine should be simply a case of adding `engine = "ajv"`
+to your `json_validator` or `json_validate` calls, but you may see some
+issues when doing so.
+
+- Your json now fails validation: We've seen this where schemas spanned
+  several files and are silently ignored. By including these, your data
+  may now fail validation and you will need to either fix the data or
+  the schema.
+
+- Your code depended on the exact payload returned by `imjv`: If you are
+  inspecting the error result and checking numbers of errors, or even
+  the columns used to describe the errors, you will likely need to
+  update your code to accommodate the slightly different format of `ajv`
+
+- Your schema is simply invalid: If you reference an invalid metaschema
+  for example, jsonvalidate will fail
+
+## Using multiple files
+
+Multiple files are supported. You can have a schema that references a
+file `child.json` using `{"$ref": "child.json"}`—in this case if
+`child.json` includes an `id` or `$id` element it will be silently
+dropped and the filename used to reference the schema will be used as
+the schema id.
+
+The support is currently quite limited - it will not (yet) read
+sub-child schemas relative to child schema `$id` url, and does not
+support reading from URLs (only local files are supported).
+
+## Examples
+
+``` r
+# A simple schema example:
+schema <- '{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "Product",
+    "description": "A product from Acme\'s catalog",
+    "type": "object",
+    "properties": {
+        "id": {
+            "description": "The unique identifier for a product",
+            "type": "integer"
+        },
+        "name": {
+            "description": "Name of the product",
+            "type": "string"
+        },
+        "price": {
+            "type": "number",
+            "minimum": 0,
+            "exclusiveMinimum": true
+        },
+        "tags": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "minItems": 1,
+            "uniqueItems": true
+        }
+    },
+    "required": ["id", "name", "price"]
+}'
+
+# Create a validator function
+v <- jsonvalidate::json_validator(schema)
+
+# Test if some (invalid) json conforms to the schema
+v("{}", verbose = TRUE)
+#> [1] FALSE
+#> attr(,"errors")
+#>        field     message
+#> 1    data.id is required
+#> 2  data.name is required
+#> 3 data.price is required
+
+# Test if some (valid) json conforms to the schema
+v('{
+    "id": 1,
+    "name": "A green door",
+    "price": 12.50,
+    "tags": ["home", "green"]
+}')
+#> [1] TRUE
+
+# Using features from draft-06 or draft-07 requires the ajv engine:
+schema <- "{
+  '$schema': 'http://json-schema.org/draft-06/schema#',
+  'type': 'object',
+  'properties': {
+    'a': {
+      'const': 'foo'
+    }
+  }
+}"
+
+# Create the validator
+v <- jsonvalidate::json_validator(schema, engine = "ajv")
+
+# This confirms to the schema
+v('{"a": "foo"}')
+#> [1] TRUE
+
+# But this does not
+v('{"a": "bar"}')
+#> [1] FALSE
+```

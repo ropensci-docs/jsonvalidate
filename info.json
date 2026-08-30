@@ -1,0 +1,13 @@
+{
+  "commit": {
+    "commit": "01868830ce88f6e44fec8d86f3e3185cb4f16352",
+    "author": "Rich FitzJohn <r.fitzjohn@imperial.ac.uk>",
+    "time": "2025-02-07T11:47:42Z",
+    "files": 12,
+    "merge": true,
+    "message": "Merge pull request #82 from ropensci/prepare-release-1-5-0\n\nPrepare CRAN release"
+  },
+  "repo": "https://github.com/ropensci/jsonvalidate",
+  "pkg": "jsonvalidate",
+  "time": "2026-08-30T07:42:55Z"
+}
